@@ -1,6 +1,6 @@
 # Watchlist Pro for Kite
 
-Advanced TradingView like watchlists for Zerodha Kite.
+Advanced watchlists for Zerodha Kite.
 
 ## 🚀 Features
 
