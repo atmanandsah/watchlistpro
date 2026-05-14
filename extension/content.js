@@ -316,18 +316,29 @@
         </div>
         <button class="wlpro-rm" data-sym="${sym}" title="Remove">✕</button>`;
 
-      item.onclick = e => {
-        if (e.target.classList.contains('wlpro-rm')) return;
+      item.addEventListener('click', e => {
+        // If click is on the remove button or inside it
+        if (e.target.closest('.wlpro-rm')) return;
         activeIdx = idx;
         highlight(panel.querySelectorAll('.wlpro-item'));
         navigateToSymbol(sym);
-      };
+      });
 
-      item.querySelector('.wlpro-rm').onclick = e => {
+      const rmBtn = item.querySelector('.wlpro-rm');
+      rmBtn.addEventListener('click', e => {
+        e.preventDefault();
         e.stopPropagation();
-        const i = list.symbols.indexOf(sym);
-        if (i >= 0) { list.symbols.splice(i, 1); saveData(data, renderList); }
-      };
+        const currentList = data.lists[data.activeIndex];
+        const i = currentList.symbols.indexOf(sym);
+        if (i >= 0) { 
+          currentList.symbols.splice(i, 1); 
+          saveData(data, () => {
+             renderList();
+          }); 
+        } else {
+          console.error("Symbol not found in list:", sym);
+        }
+      });
 
       listEl.appendChild(item);
     });
