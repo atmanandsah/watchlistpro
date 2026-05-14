@@ -145,8 +145,18 @@
     refresh();
   }
 
-  function show() { if (!panel) createPanel(); panel.classList.remove('wlpro-hidden'); visible = true; refresh(); }
-  function hide() { if (panel) panel.classList.add('wlpro-hidden'); visible = false; }
+  function show() { 
+    if (!panel) createPanel(); 
+    panel.classList.remove('wlpro-hidden'); 
+    document.body.classList.add('wlpro-open');
+    visible = true; 
+    refresh(); 
+  }
+  function hide() { 
+    if (panel) panel.classList.add('wlpro-hidden'); 
+    document.body.classList.remove('wlpro-open');
+    visible = false; 
+  }
   function toggle() { visible ? hide() : show(); return visible; }
 
   // ─── Events ───

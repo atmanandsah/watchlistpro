@@ -433,3 +433,18 @@
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ─── Push Host Page Layout ─── */
+/* Force Upstox containers to shrink so the sidebar doesn't overlay */
+body.wlpro-open {
+  width: calc(100vw - 320px) !important;
+  overflow-x: hidden !important;
+}
+/* Upstox usually wraps the main app in a container that needs to be restricted */
+body.wlpro-open #app,
+body.wlpro-open #root,
+body.wlpro-open > div {
+  width: calc(100vw - 320px) !important;
+  max-width: calc(100vw - 320px) !important;
+}
+
