@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Watchlist Pro — Upstox",
+  "version": "2.0.0",
+  "description": "Advanced watchlist panel for Upstox trading terminal. Click icon to toggle.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["https://tv.upstox.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://tv.upstox.com/*"],
+      "js": ["content.js"],
+      "css": ["panel.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["instruments-upstox.json"],
+      "matches": ["https://tv.upstox.com/*"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Toggle Watchlist Pro"
+  }
+}

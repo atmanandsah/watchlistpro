@@ -1,0 +1,435 @@
+/* Watchlist Pro — Upstox Panel Styles */
+/* Scoped under #wlpro-panel to avoid conflicts with Upstox page */
+
+/* ─── Panel Container ─── */
+#wlpro-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  z-index: 999999;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+  transition: transform 0.25s ease;
+  border-left: 1px solid rgba(108, 99, 255, 0.2);
+}
+#wlpro-panel.wlpro-hidden {
+  transform: translateX(100%);
+  pointer-events: none;
+}
+
+/* ─── Header ─── */
+#wlpro-panel .wlpro-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #16213e, #1a1a2e);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+#wlpro-panel .wlpro-title {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  background: linear-gradient(135deg, #6c63ff, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+#wlpro-panel .wlpro-header-btns {
+  display: flex;
+  gap: 4px;
+}
+#wlpro-panel .wlpro-header-btns button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ccc;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+#wlpro-panel .wlpro-header-btns button:hover {
+  background: rgba(108, 99, 255, 0.2);
+  border-color: rgba(108, 99, 255, 0.4);
+  color: #fff;
+}
+
+/* ─── Toolbar ─── */
+#wlpro-panel .wlpro-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+}
+#wlpro-panel .wlpro-toolbar select {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+#wlpro-panel .wlpro-toolbar select:focus {
+  border-color: rgba(108, 99, 255, 0.5);
+}
+#wlpro-panel .wlpro-toolbar button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ccc;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+#wlpro-panel .wlpro-toolbar button:hover {
+  background: rgba(108, 99, 255, 0.15);
+  color: #fff;
+}
+
+/* ─── New Watchlist Row ─── */
+#wlpro-panel .wlpro-newrow {
+  display: none;
+  gap: 6px;
+  padding: 6px 14px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+#wlpro-panel .wlpro-newrow.visible {
+  display: flex;
+}
+#wlpro-panel .wlpro-newrow input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  outline: none;
+}
+#wlpro-panel .wlpro-newrow input:focus {
+  border-color: rgba(108, 99, 255, 0.5);
+}
+#wlpro-panel .wlpro-newrow button {
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+#wlpro-panel .wlpro-newrow button:first-of-type {
+  background: linear-gradient(135deg, #6c63ff, #3f51b5);
+  color: #fff;
+}
+#wlpro-panel .wlpro-newrow button:last-of-type {
+  background: rgba(255, 255, 255, 0.06);
+  color: #aaa;
+}
+
+/* ─── Search / Filter ─── */
+#wlpro-panel .wlpro-search-wrap {
+  padding: 8px 14px;
+  flex-shrink: 0;
+}
+#wlpro-panel .wlpro-search-wrap input,
+#wlpro-panel #wlpro-addsearch {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+#wlpro-panel .wlpro-search-wrap input:focus,
+#wlpro-panel #wlpro-addsearch:focus {
+  border-color: rgba(108, 99, 255, 0.6);
+  box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.1);
+}
+
+/* ─── Symbol List ─── */
+#wlpro-panel .wlpro-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+#wlpro-panel .wlpro-list::-webkit-scrollbar {
+  width: 5px;
+}
+#wlpro-panel .wlpro-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+#wlpro-panel .wlpro-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+  border-left: 3px solid transparent;
+}
+#wlpro-panel .wlpro-item:hover {
+  background: rgba(108, 99, 255, 0.06);
+  border-left-color: rgba(108, 99, 255, 0.3);
+}
+#wlpro-panel .wlpro-item.wlpro-active {
+  background: rgba(108, 99, 255, 0.12);
+  border-left-color: #6c63ff;
+}
+#wlpro-panel .wlpro-item-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+#wlpro-panel .wlpro-item-sym {
+  font-weight: 600;
+  font-size: 13px;
+  color: #f0f0f0;
+}
+#wlpro-panel .wlpro-item-exch {
+  font-size: 11px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#wlpro-panel .wlpro-rm {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: all 0.15s;
+}
+#wlpro-panel .wlpro-item:hover .wlpro-rm {
+  opacity: 1;
+}
+#wlpro-panel .wlpro-rm:hover {
+  background: rgba(255, 80, 80, 0.15);
+  color: #ff5050;
+}
+
+/* ─── Empty State ─── */
+#wlpro-panel .wlpro-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  color: #555;
+  text-align: center;
+}
+#wlpro-panel .wlpro-empty-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+/* ─── Footer ─── */
+#wlpro-panel .wlpro-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  color: #555;
+  flex-shrink: 0;
+}
+#wlpro-panel .wlpro-footer kbd {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 10px;
+  color: #888;
+  margin: 0 2px;
+}
+
+/* ─── Modal Overlay ─── */
+#wlpro-panel .wlpro-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 60px;
+  z-index: 10;
+  backdrop-filter: blur(2px);
+}
+#wlpro-panel .wlpro-modal {
+  background: #1e1e36;
+  border: 1px solid rgba(108, 99, 255, 0.2);
+  border-radius: 12px;
+  width: 290px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+#wlpro-panel .wlpro-modal-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-weight: 600;
+  font-size: 14px;
+}
+#wlpro-panel .wlpro-modal-x {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+}
+#wlpro-panel .wlpro-modal-x:hover { color: #fff; }
+#wlpro-panel .wlpro-modal-body {
+  padding: 14px;
+}
+#wlpro-panel .wlpro-modal-body textarea {
+  width: 100%;
+  min-height: 120px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+#wlpro-panel .wlpro-modal-body textarea:focus {
+  border-color: rgba(108, 99, 255, 0.5);
+}
+#wlpro-panel .wlpro-hint {
+  font-size: 11px;
+  color: #555;
+  margin-top: 6px;
+}
+#wlpro-panel .wlpro-modal-ftr {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+#wlpro-panel .wlpro-btn-pri {
+  background: linear-gradient(135deg, #6c63ff, #3f51b5);
+  color: #fff;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+#wlpro-panel .wlpro-btn-pri:hover { opacity: 0.85; }
+#wlpro-panel .wlpro-btn-sec {
+  background: rgba(255, 255, 255, 0.06);
+  color: #aaa;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+#wlpro-panel .wlpro-btn-sec:hover { color: #fff; }
+
+/* ─── Search Result Rows ─── */
+#wlpro-panel .wlpro-search-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background 0.1s;
+}
+#wlpro-panel .wlpro-search-row:hover {
+  background: rgba(108, 99, 255, 0.06);
+}
+#wlpro-panel .wlpro-sr-sym {
+  font-weight: 600;
+  font-size: 13px;
+  color: #f0f0f0;
+}
+#wlpro-panel .wlpro-sr-exch {
+  font-size: 11px;
+  color: #666;
+}
+#wlpro-panel .wlpro-sr-btn {
+  padding: 4px 12px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, #6c63ff, #3f51b5);
+  color: #fff;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+#wlpro-panel .wlpro-sr-btn:hover { opacity: 0.85; }
+#wlpro-panel .wlpro-sr-btn.added {
+  background: rgba(255, 255, 255, 0.06);
+  color: #555;
+  cursor: default;
+}
+
+/* ─── Toast ─── */
+#wlpro-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: #2d2d4e;
+  color: #e0e0e0;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: -apple-system, sans-serif;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(108, 99, 255, 0.2);
+  z-index: 9999999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+#wlpro-toast.wlpro-toast-show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
