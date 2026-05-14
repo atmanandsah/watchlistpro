@@ -80,12 +80,56 @@
   // ─── Storage ───
   const STORE_KEY = 'wlpro_data';
   function loadData(cb) {
-    chrome.storage.local.get(STORE_KEY, r => {
-      cb(r[STORE_KEY] || { lists: [{ name: 'Default', symbols: [] }], activeIndex: 0 });
+    chrome.storage.sync.get(null, syncRes => {
+      // 1. Try to load chunked data
+      const chunkKeys = Object.keys(syncRes).filter(k => k.startsWith(STORE_KEY + '_'));
+      if (chunkKeys.length > 0) {
+        chunkKeys.sort((a, b) => parseInt(a.split('_').pop()) - parseInt(b.split('_').pop()));
+        try {
+          const jsonStr = chunkKeys.map(k => syncRes[k]).join('');
+          cb(JSON.parse(jsonStr));
+          return;
+        } catch (e) {
+          console.error("Failed to parse chunked sync data", e);
+        }
+      } else if (syncRes[STORE_KEY]) {
+        // 2. Legacy unchunked fallback
+        cb(syncRes[STORE_KEY]);
+        return;
+      }
+      
+      // 3. Fallback to local
+      chrome.storage.local.get(STORE_KEY, localRes => {
+        cb(localRes[STORE_KEY] || { lists: [{ name: 'Default', symbols: [] }], activeIndex: 0 });
+      });
     });
   }
+
+  const CHUNK_SIZE = 7500; // Safe limit below 8192 bytes
   function saveData(data, cb) {
-    chrome.storage.local.set({ [STORE_KEY]: data }, cb);
+    chrome.storage.local.set({ [STORE_KEY]: data }, () => {
+      if (chrome.runtime.lastError) console.error("Local storage error:", chrome.runtime.lastError);
+      
+      // Stringify and chunk data to bypass 8KB limit per item
+      const jsonStr = JSON.stringify(data);
+      const chunks = {};
+      for (let i = 0; i < jsonStr.length; i += CHUNK_SIZE) {
+        chunks[`${STORE_KEY}_${i / CHUNK_SIZE}`] = jsonStr.substring(i, i + CHUNK_SIZE);
+      }
+      
+      chrome.storage.sync.get(null, syncRes => {
+        // Clear old chunks before saving new ones
+        const oldKeys = Object.keys(syncRes).filter(k => k.startsWith(STORE_KEY));
+        chrome.storage.sync.remove(oldKeys, () => {
+          chrome.storage.sync.set(chunks, () => {
+            if (chrome.runtime.lastError) {
+              console.warn("Sync storage failed:", chrome.runtime.lastError.message);
+            }
+            if (cb) cb();
+          });
+        });
+      });
+    });
   }
 
   // ─── Toast ───
