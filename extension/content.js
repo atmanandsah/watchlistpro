@@ -251,6 +251,78 @@
     // Filter
     panel.querySelector('#wlpro-filter').oninput = () => renderList();
 
+    // Drag and Drop ordering
+    const listEl = panel.querySelector('#wlpro-list');
+    let dragSrcEl = null;
+
+    listEl.addEventListener('dragstart', e => {
+      const item = e.target.closest('.wlpro-item');
+      if (!item) return;
+      dragSrcEl = item;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', item.dataset.idx);
+      item.classList.add('wlpro-dragging');
+    });
+
+    listEl.addEventListener('dragover', e => {
+      e.preventDefault(); 
+      const item = e.target.closest('.wlpro-item');
+      if (item && dragSrcEl && item !== dragSrcEl) {
+        const rect = item.getBoundingClientRect();
+        const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+        if (next) {
+          item.classList.add('wlpro-drop-after');
+          item.classList.remove('wlpro-drop-before');
+        } else {
+          item.classList.add('wlpro-drop-before');
+          item.classList.remove('wlpro-drop-after');
+        }
+        e.dataTransfer.dropEffect = 'move';
+      }
+      return false;
+    });
+
+    listEl.addEventListener('dragleave', e => {
+      const item = e.target.closest('.wlpro-item');
+      if (item) item.classList.remove('wlpro-drop-before', 'wlpro-drop-after');
+    });
+
+    listEl.addEventListener('drop', e => {
+      e.stopPropagation();
+      const item = e.target.closest('.wlpro-item');
+      if (dragSrcEl && item && dragSrcEl !== item) {
+        const fromIdx = parseInt(dragSrcEl.dataset.idx);
+        const toIdx = parseInt(item.dataset.idx);
+        
+        const q = (panel.querySelector('#wlpro-filter').value || '').trim();
+        if (q) {
+          showToast("Cannot reorder while filtering");
+          return false;
+        }
+
+        const currentList = data.lists[data.activeIndex];
+        const rect = item.getBoundingClientRect();
+        const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+        
+        let finalToIdx = toIdx;
+        if (next) finalToIdx++;
+        if (fromIdx < finalToIdx) finalToIdx--;
+        
+        const [moved] = currentList.symbols.splice(fromIdx, 1);
+        currentList.symbols.splice(finalToIdx, 0, moved);
+        
+        saveData(data, () => renderList());
+      }
+      return false;
+    });
+
+    listEl.addEventListener('dragend', e => {
+      const item = e.target.closest('.wlpro-item');
+      if (item) item.classList.remove('wlpro-dragging');
+      listEl.querySelectorAll('.wlpro-item').forEach(el => el.classList.remove('wlpro-drop-before', 'wlpro-drop-after'));
+      dragSrcEl = null;
+    });
+
     // Keyboard nav
     panel.onkeydown = e => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
@@ -321,6 +393,8 @@
 
       const item = document.createElement('div');
       item.className = 'wlpro-item';
+      item.draggable = !q; // Only draggable if not filtering
+      item.dataset.idx = idx;
       item.innerHTML = `
         <div class="wlpro-item-info">
           <span class="wlpro-item-sym">${symbol}</span>

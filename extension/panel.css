@@ -448,3 +448,20 @@ body.wlpro-open > div {
   max-width: calc(100vw - 320px) !important;
 }
 
+/* ─── Drag and Drop ─── */
+#wlpro-panel .wlpro-item[draggable="true"] {
+  cursor: grab;
+}
+#wlpro-panel .wlpro-item[draggable="true"]:active {
+  cursor: grabbing;
+}
+#wlpro-panel .wlpro-item.wlpro-dragging {
+  opacity: 0.4;
+  background: rgba(108, 99, 255, 0.15) !important;
+}
+#wlpro-panel .wlpro-drop-before {
+  border-top: 2px solid #6c63ff !important;
+}
+#wlpro-panel .wlpro-drop-after {
+  border-bottom: 2px solid #6c63ff !important;
+}
