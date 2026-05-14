@@ -256,9 +256,21 @@
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
       const items = panel.querySelectorAll('.wlpro-item');
       if (!items.length) return;
-      if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); highlight(items); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); highlight(items); }
-      else if (e.key === 'Enter' && activeIdx >= 0 && activeIdx < filtered.length) { navigateToSymbol(filtered[activeIdx]); }
+      if (e.key === 'ArrowDown') { 
+        e.preventDefault(); 
+        activeIdx = Math.min(activeIdx + 1, items.length - 1); 
+        highlight(items); 
+        navigateToSymbol(filtered[activeIdx]);
+      }
+      else if (e.key === 'ArrowUp') { 
+        e.preventDefault(); 
+        activeIdx = Math.max(activeIdx - 1, 0); 
+        highlight(items); 
+        navigateToSymbol(filtered[activeIdx]);
+      }
+      else if (e.key === 'Enter' && activeIdx >= 0 && activeIdx < filtered.length) { 
+        navigateToSymbol(filtered[activeIdx]); 
+      }
     };
     panel.tabIndex = -1;
   }
