@@ -356,7 +356,12 @@
 
   // ─── Rendering ───
   function refresh() {
-    loadData(d => { data = d; renderSelect(); renderList(); });
+    loadData(d => { 
+      data = d; 
+      data.colors = data.colors || {};
+      renderSelect(); 
+      renderList(); 
+    });
   }
 
   function renderSelect() {
@@ -391,11 +396,15 @@
       const [exchange, symbol] = sym.includes(':') ? sym.split(':') : ['', sym];
       const name = getDisplayName(sym);
 
+      const color = data.colors[sym] || 'transparent';
+      const hasColor = color !== 'transparent';
+      
       const item = document.createElement('div');
       item.className = 'wlpro-item';
       item.draggable = !q; // Only draggable if not filtering
       item.dataset.idx = idx;
       item.innerHTML = `
+        <div class="wlpro-item-flag ${hasColor ? 'active' : ''}" style="background-color: ${hasColor ? color : 'transparent'}" title="Color tag" data-sym="${sym}"></div>
         <div class="wlpro-item-info">
           <span class="wlpro-item-sym">${symbol}</span>
           <span class="wlpro-item-exch">${exchange}${name ? ' · ' + name : ''}</span>
@@ -403,8 +412,8 @@
         <button class="wlpro-rm" data-sym="${sym}" title="Remove">✕</button>`;
 
       item.addEventListener('click', e => {
-        // If click is on the remove button or inside it
-        if (e.target.closest('.wlpro-rm')) return;
+        // If click is on the remove button, flag, or inside them
+        if (e.target.closest('.wlpro-rm') || e.target.closest('.wlpro-item-flag')) return;
         activeIdx = idx;
         highlight(panel.querySelectorAll('.wlpro-item'));
         navigateToSymbol(sym);
@@ -426,8 +435,75 @@
         }
       });
 
+      const flagBtn = item.querySelector('.wlpro-item-flag');
+      flagBtn.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        showColorPicker(flagBtn, sym);
+      });
+
       listEl.appendChild(item);
     });
+  }
+
+  // ─── Color Picker ───
+  function showColorPicker(target, sym) {
+    let picker = document.getElementById('wlpro-color-picker');
+    if (picker) picker.remove();
+
+    picker = document.createElement('div');
+    picker.id = 'wlpro-color-picker';
+    
+    const colors = [
+      { id: 'red', val: '#f23645' },
+      { id: 'blue', val: '#2962ff' },
+      { id: 'green', val: '#089981' },
+      { id: 'yellow', val: '#ff9800' },
+      { id: 'purple', val: '#9c27b0' },
+      { id: 'cyan', val: '#00bcd4' },
+      { id: 'pink', val: '#e91e63' },
+      { id: 'clear', val: 'transparent' }
+    ];
+
+    let html = '';
+    colors.forEach(c => {
+      if (c.id === 'clear') {
+        html += `<div class="wlpro-color-circle clear" data-val="transparent" title="Clear">✕</div>`;
+      } else {
+        html += `<div class="wlpro-color-circle" style="background:${c.val}" data-val="${c.val}"></div>`;
+      }
+    });
+
+    picker.innerHTML = html;
+    document.documentElement.appendChild(picker);
+
+    const rect = target.getBoundingClientRect();
+    picker.style.top = (rect.bottom + 8) + 'px';
+    picker.style.left = (rect.left - 10) + 'px';
+
+    picker.querySelectorAll('.wlpro-color-circle').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const v = btn.getAttribute('data-val');
+        if (v === 'transparent') {
+          delete data.colors[sym];
+        } else {
+          data.colors[sym] = v;
+        }
+        picker.remove();
+        saveData(data, renderList);
+      };
+    });
+
+    setTimeout(() => {
+      const closePicker = (e) => {
+        if (!picker.contains(e.target)) {
+          picker.remove();
+          document.removeEventListener('click', closePicker);
+        }
+      };
+      document.addEventListener('click', closePicker);
+    }, 0);
   }
 
   // ─── Add Symbol Modal ───

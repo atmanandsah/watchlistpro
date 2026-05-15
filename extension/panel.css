@@ -188,21 +188,19 @@
 }
 
 #wlpro-panel .wlpro-item {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 14px;
+  padding: 8px 14px 8px 22px;
   cursor: pointer;
   transition: background 0.1s;
-  border-left: 3px solid transparent;
 }
 #wlpro-panel .wlpro-item:hover {
   background: rgba(108, 99, 255, 0.06);
-  border-left-color: rgba(108, 99, 255, 0.3);
 }
 #wlpro-panel .wlpro-item.wlpro-active {
   background: rgba(108, 99, 255, 0.12);
-  border-left-color: #6c63ff;
 }
 #wlpro-panel .wlpro-item-info {
   display: flex;
@@ -464,4 +462,60 @@ body.wlpro-open > div {
 }
 #wlpro-panel .wlpro-drop-after {
   border-bottom: 2px solid #6c63ff !important;
+}
+
+/* ─── Flag Icon ─── */
+#wlpro-panel .wlpro-item-flag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  background-color: transparent;
+  clip-path: polygon(0 0, 100% 0, 8px 50%, 100% 100%, 0 100%);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background-color 0.15s;
+}
+#wlpro-panel .wlpro-item:hover .wlpro-item-flag {
+  opacity: 1;
+  background-color: #333;
+}
+#wlpro-panel .wlpro-item-flag.active {
+  opacity: 1;
+}
+#wlpro-panel .wlpro-item-flag:hover {
+  filter: brightness(1.2);
+}
+
+/* ─── Color Picker Popover ─── */
+#wlpro-color-picker {
+  position: fixed;
+  background: #2a2a2a;
+  border: 1px solid rgba(108, 99, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  z-index: 10000000;
+}
+#wlpro-color-picker .wlpro-color-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+#wlpro-color-picker .wlpro-color-circle:hover {
+  transform: scale(1.15);
+}
+#wlpro-color-picker .wlpro-color-circle.clear {
+  background: none;
+  border: 1px solid #555;
+  color: #888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
 }
