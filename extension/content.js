@@ -163,6 +163,7 @@
         <div class="wlpro-header-btns">
           <button id="wlpro-add" title="Add symbol">＋</button>
           <button id="wlpro-import" title="Import symbols">⬆</button>
+          <button id="wlpro-export" title="Export symbols">⬇</button>
           <button id="wlpro-close" title="Close">✕</button>
         </div>
       </div>
@@ -247,6 +248,9 @@
 
     // Import
     panel.querySelector('#wlpro-import').onclick = showImportModal;
+
+    // Export
+    panel.querySelector('#wlpro-export').onclick = showExportModal;
 
     // Filter
     panel.querySelector('#wlpro-filter').oninput = () => renderList();
@@ -598,6 +602,48 @@
 
     panel.appendChild(ov);
     setTimeout(() => ov.querySelector('#wlpro-importtext').focus(), 50);
+  }
+
+  // ─── Export Modal ───
+  function showExportModal() {
+    removeModals();
+    const list = data.lists[data.activeIndex];
+    const textContent = list.symbols.join('\n');
+    
+    const ov = document.createElement('div');
+    ov.className = 'wlpro-overlay';
+    ov.innerHTML = `
+      <div class="wlpro-modal">
+        <div class="wlpro-modal-hdr"><span>Export Symbols</span><button class="wlpro-modal-x">✕</button></div>
+        <div class="wlpro-modal-body">
+          <textarea id="wlpro-exporttext" readonly style="cursor: text;">${textContent}</textarea>
+          <div class="wlpro-hint">Symbols in your current watchlist</div>
+        </div>
+        <div class="wlpro-modal-ftr">
+          <button class="wlpro-btn-sec wlpro-cancel">Close</button>
+          <button class="wlpro-btn-pri" id="wlpro-exportcopy">Copy to Clipboard</button>
+        </div>
+      </div>`;
+
+    ov.querySelector('.wlpro-modal-x').onclick = () => ov.remove();
+    ov.querySelector('.wlpro-cancel').onclick = () => ov.remove();
+    ov.onclick = e => { if (e.target === ov) ov.remove(); };
+
+    ov.querySelector('#wlpro-exportcopy').onclick = () => {
+      navigator.clipboard.writeText(textContent).then(() => {
+        showToast('Copied to clipboard!');
+        ov.remove();
+      }).catch(() => {
+        showToast('Failed to copy');
+      });
+    };
+
+    panel.appendChild(ov);
+    setTimeout(() => {
+      const ta = ov.querySelector('#wlpro-exporttext');
+      ta.focus();
+      ta.select();
+    }, 50);
   }
 
   function removeModals() { if (panel) panel.querySelectorAll('.wlpro-overlay').forEach(e => e.remove()); }
