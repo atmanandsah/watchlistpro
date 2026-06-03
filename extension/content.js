@@ -25,6 +25,21 @@
     return e.s || e.n || '';
   }
 
+  // Builds Upstox instrument key: "NSE:HDFCBANK" → "NSE_EQ|INE040A01034"
+  function getInstrumentKey(sym) {
+    const isin = getIsin(sym);
+    if (isin) {
+      const exch = sym.split(':')[0] || 'NSE';
+      return `${exch}_EQ|${isin}`;
+    }
+    const symbol = (sym.split(':')[1] || sym).toUpperCase();
+    if (symbol.includes('NIFTY 50'))     return 'NSE_INDEX|Nifty 50';
+    if (symbol.includes('NIFTY BANK'))   return 'NSE_INDEX|Nifty Bank';
+    if (symbol.includes('SENSEX'))       return 'BSE_INDEX|SENSEX';
+    if (symbol.includes('NIFTY MIDCAP')) return 'NSE_INDEX|Nifty Midcap 50';
+    return null;
+  }
+
   // ─── URL Builder ───
   // Using TradingView API to switch charts without reloading!
   function changeUpstoxChart(isin, symbolName) {
@@ -608,16 +623,27 @@
   function showExportModal() {
     removeModals();
     const list = data.lists[data.activeIndex];
-    const textContent = list.symbols.join('\n');
-    
+
+    // Build both formats
+    const symbolFormat  = list.symbols.join('\n');  // NSE:HDFCBANK
+    const keyFormat     = list.symbols
+      .map(s => getInstrumentKey(s) || s)           // NSE_EQ|INE040A01034
+      .join('\n');
+
+    let currentFormat = 'symbol'; // toggle state
+
     const ov = document.createElement('div');
     ov.className = 'wlpro-overlay';
     ov.innerHTML = `
       <div class="wlpro-modal">
         <div class="wlpro-modal-hdr"><span>Export Symbols</span><button class="wlpro-modal-x">✕</button></div>
         <div class="wlpro-modal-body">
-          <textarea id="wlpro-exporttext" readonly style="cursor: text;">${textContent}</textarea>
-          <div class="wlpro-hint">Symbols in your current watchlist</div>
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <button id="wlpro-fmt-sym" class="wlpro-btn-pri" style="flex:1;font-size:11px;padding:5px">NSE:SYMBOL</button>
+            <button id="wlpro-fmt-key" class="wlpro-btn-sec" style="flex:1;font-size:11px;padding:5px">NSE_EQ|ISIN Key</button>
+          </div>
+          <textarea id="wlpro-exporttext" readonly style="cursor:text">${symbolFormat}</textarea>
+          <div class="wlpro-hint" id="wlpro-export-hint">Standard format for import/export</div>
         </div>
         <div class="wlpro-modal-ftr">
           <button class="wlpro-btn-sec wlpro-cancel">Close</button>
@@ -625,25 +651,42 @@
         </div>
       </div>`;
 
-    ov.querySelector('.wlpro-modal-x').onclick = () => ov.remove();
-    ov.querySelector('.wlpro-cancel').onclick = () => ov.remove();
+    const ta     = ov.querySelector('#wlpro-exporttext');
+    const hint   = ov.querySelector('#wlpro-export-hint');
+    const btnSym = ov.querySelector('#wlpro-fmt-sym');
+    const btnKey = ov.querySelector('#wlpro-fmt-key');
+
+    function setFormat(fmt) {
+      currentFormat = fmt;
+      if (fmt === 'symbol') {
+        ta.value = symbolFormat;
+        hint.textContent = 'Standard format for import/export';
+        btnSym.className = 'wlpro-btn-pri';
+        btnKey.className = 'wlpro-btn-sec';
+      } else {
+        ta.value = keyFormat;
+        hint.textContent = 'Upstox instrument key format (NSE_EQ|ISIN)';
+        btnSym.className = 'wlpro-btn-sec';
+        btnKey.className = 'wlpro-btn-pri';
+      }
+    }
+
+    btnSym.onclick = () => setFormat('symbol');
+    btnKey.onclick = () => setFormat('key');
+
+    ov.querySelector('.wlpro-modal-x').onclick   = () => ov.remove();
+    ov.querySelector('.wlpro-cancel').onclick     = () => ov.remove();
     ov.onclick = e => { if (e.target === ov) ov.remove(); };
 
     ov.querySelector('#wlpro-exportcopy').onclick = () => {
-      navigator.clipboard.writeText(textContent).then(() => {
+      navigator.clipboard.writeText(ta.value).then(() => {
         showToast('Copied to clipboard!');
         ov.remove();
-      }).catch(() => {
-        showToast('Failed to copy');
-      });
+      }).catch(() => showToast('Failed to copy'));
     };
 
     panel.appendChild(ov);
-    setTimeout(() => {
-      const ta = ov.querySelector('#wlpro-exporttext');
-      ta.focus();
-      ta.select();
-    }, 50);
+    setTimeout(() => { ta.focus(); ta.select(); }, 50);
   }
 
   function removeModals() { if (panel) panel.querySelectorAll('.wlpro-overlay').forEach(e => e.remove()); }
