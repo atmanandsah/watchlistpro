@@ -5,12 +5,25 @@
 
   // ─── Instrument Data ───
   let instruments = {}; // { "NSE:HDFCBANK": { i:"INE040A01034", n:"HDFC BANK LTD", s:"HDFC Bank" }, ... }
+  let instrumentLookup = {}; // { "NSE_EQ|INE040A01034": "NSE:HDFCBANK", ... }
 
   function loadInstruments() {
     return fetch(chrome.runtime.getURL('instruments-upstox.json'))
       .then(r => r.json())
-      .then(data => { instruments = data; })
-      .catch(() => { instruments = {}; });
+      .then(data => {
+        instruments = data;
+        instrumentLookup = {};
+        for (const [key, entry] of Object.entries(instruments)) {
+          if (entry && entry.i) {
+            const exch = key.split(':')[0] || 'NSE';
+            instrumentLookup[`${exch}_EQ|${entry.i}`] = key;
+          }
+        }
+      })
+      .catch(() => {
+        instruments = {};
+        instrumentLookup = {};
+      });
   }
 
   function getIsin(key) {
@@ -70,13 +83,28 @@
   // ─── Search ───
   function searchInstruments(query, limit = 40) {
     if (!query || query.length < 1) return [];
-    const q = query.toUpperCase();
+    // Sanitize query by removing quotes, commas, brackets, and spaces
+    const q = query.replace(/[\s"',\[\]]/g, '').toUpperCase();
+
+    // Direct lookup for instrument key format (e.g. NSE_EQ|ISIN)
+    if (q.includes('|')) {
+      const resolved = instrumentLookup[q];
+      if (resolved) return [resolved];
+    }
+
+    // Direct lookup for raw ISIN (length 12)
+    if (q.length === 12 && /^[A-Z]{2}[A-Z0-9]{10}$/.test(q)) {
+      const resolved = instrumentLookup[`NSE_EQ|${q}`] || instrumentLookup[`BSE_EQ|${q}`];
+      if (resolved) return [resolved];
+    }
+
     const results = [];
     for (const [key, entry] of Object.entries(instruments)) {
       const symbol = key.split(':')[1] || key;
       const name = (typeof entry === 'object' ? (entry.n || '') : '').toUpperCase();
       const shortName = (typeof entry === 'object' ? (entry.s || '') : '').toUpperCase();
-      if (symbol.startsWith(q) || key.includes(q) || name.includes(q) || shortName.includes(q)) {
+      const isin = (typeof entry === 'object' ? (entry.i || '') : '').toUpperCase();
+      if (symbol.startsWith(q) || key.includes(q) || name.includes(q) || shortName.includes(q) || isin.startsWith(q)) {
         results.push(key);
         if (results.length >= limit) break;
       }
@@ -607,11 +635,30 @@
     ov.onclick = e => { if (e.target === ov) ov.remove(); };
 
     ov.querySelector('#wlpro-importgo').onclick = () => {
-      const lines = ov.querySelector('#wlpro-importtext').value.split('\n').map(l => l.trim().toUpperCase()).filter(Boolean);
+      const lines = ov.querySelector('#wlpro-importtext').value.split('\n').filter(Boolean);
       if (!lines.length) return;
       const list = data.lists[data.activeIndex];
       let added = 0;
-      lines.forEach(s => { if (!list.symbols.includes(s)) { list.symbols.push(s); added++; } });
+      lines.forEach(line => {
+        // Sanitize input: remove quotes, commas, brackets, and spaces
+        const s = line.replace(/[\s"',\[\]]/g, '').toUpperCase();
+        if (!s) return;
+
+        let resolved = s;
+        // Resolve instrument key format (e.g. NSE_EQ|ISIN)
+        if (s.includes('|')) {
+          const lookupKey = instrumentLookup[s];
+          if (lookupKey) resolved = lookupKey;
+        } else if (s.startsWith('INE') || s.length === 12) {
+          // Resolve raw ISIN to standard exchange key
+          const lookupKey = instrumentLookup[`NSE_EQ|${s}`] || instrumentLookup[`BSE_EQ|${s}`];
+          if (lookupKey) resolved = lookupKey;
+        }
+        if (!list.symbols.includes(resolved)) {
+          list.symbols.push(resolved);
+          added++;
+        }
+      });
       saveData(data, () => { renderList(); ov.remove(); showToast(`Imported ${added} symbols`); });
     };
 
