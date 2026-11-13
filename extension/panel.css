@@ -219,6 +219,32 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+#wlpro-panel .wlpro-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+#wlpro-panel .wlpro-item:hover .wlpro-item-actions {
+  opacity: 1;
+}
+#wlpro-panel .wlpro-move {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 3px 5px;
+  border-radius: 4px;
+  transition: all 0.15s;
+  line-height: 1;
+}
+#wlpro-panel .wlpro-move:hover {
+  background: rgba(99, 155, 255, 0.15);
+  color: #6c9eff;
+}
 #wlpro-panel .wlpro-rm {
   background: none;
   border: none;
@@ -227,11 +253,7 @@
   font-size: 12px;
   padding: 4px 6px;
   border-radius: 4px;
-  opacity: 0;
   transition: all 0.15s;
-}
-#wlpro-panel .wlpro-item:hover .wlpro-rm {
-  opacity: 1;
 }
 #wlpro-panel .wlpro-rm:hover {
   background: rgba(255, 80, 80, 0.15);
@@ -518,4 +540,37 @@ body.wlpro-open > div {
   align-items: center;
   justify-content: center;
   font-size: 10px;
+}
+
+/* ─── Move to Watchlist Popover ─── */
+#wlpro-move-popover {
+  position: fixed;
+  background: #252538;
+  border: 1px solid rgba(108, 99, 255, 0.25);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  z-index: 10000001;
+  min-width: 140px;
+}
+#wlpro-move-popover .wlpro-movepop-hdr {
+  padding: 6px 12px;
+  font-size: 10px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+#wlpro-move-popover .wlpro-movepop-item {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #ccc;
+  cursor: pointer;
+  transition: background 0.1s;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+#wlpro-move-popover .wlpro-movepop-item:hover {
+  background: rgba(108, 99, 255, 0.15);
+  color: #fff;
 }

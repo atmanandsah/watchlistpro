@@ -207,6 +207,8 @@
           <button id="wlpro-add" title="Add symbol">＋</button>
           <button id="wlpro-import" title="Import symbols">⬆</button>
           <button id="wlpro-export" title="Export symbols">⬇</button>
+          <button id="wlpro-backup" title="Backup all watchlists to JSON">💾</button>
+          <button id="wlpro-restore" title="Restore from JSON backup">📂</button>
           <button id="wlpro-close" title="Close">✕</button>
         </div>
       </div>
@@ -294,6 +296,12 @@
 
     // Export
     panel.querySelector('#wlpro-export').onclick = showExportModal;
+
+    // Backup
+    panel.querySelector('#wlpro-backup').onclick = backupData;
+
+    // Restore
+    panel.querySelector('#wlpro-restore').onclick = restoreData;
 
     // Filter
     panel.querySelector('#wlpro-filter').oninput = () => renderList();
@@ -456,11 +464,14 @@
           <span class="wlpro-item-sym">${symbol}</span>
           <span class="wlpro-item-exch">${exchange}${name ? ' · ' + name : ''}</span>
         </div>
-        <button class="wlpro-rm" data-sym="${sym}" title="Remove">✕</button>`;
+        <div class="wlpro-item-actions">
+          ${data.lists.length > 1 ? `<button class="wlpro-move" title="Move to watchlist">→</button>` : ''}
+          <button class="wlpro-rm" data-sym="${sym}" title="Remove">✕</button>
+        </div>`;
 
       item.addEventListener('click', e => {
-        // If click is on the remove button, flag, or inside them
-        if (e.target.closest('.wlpro-rm') || e.target.closest('.wlpro-item-flag')) return;
+        // If click is on action buttons or flag, don't navigate
+        if (e.target.closest('.wlpro-item-actions') || e.target.closest('.wlpro-item-flag')) return;
         activeIdx = idx;
         highlight(panel.querySelectorAll('.wlpro-item'));
         navigateToSymbol(sym);
@@ -488,6 +499,15 @@
         e.stopPropagation();
         showColorPicker(flagBtn, sym);
       });
+
+      const moveBtn = item.querySelector('.wlpro-move');
+      if (moveBtn) {
+        moveBtn.addEventListener('click', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          showMovePopover(moveBtn, sym);
+        });
+      }
 
       listEl.appendChild(item);
     });
@@ -550,6 +570,63 @@
         }
       };
       document.addEventListener('click', closePicker);
+    }, 0);
+  }
+
+  // ─── Move to Watchlist Popover ───
+  function showMovePopover(target, sym) {
+    // Toggle: clicking the same button twice closes the popover
+    const existing = document.getElementById('wlpro-move-popover');
+    if (existing) { existing.remove(); return; }
+
+    const otherLists = data.lists
+      .map((l, i) => ({ name: l.name, idx: i }))
+      .filter(l => l.idx !== data.activeIndex);
+
+    const popover = document.createElement('div');
+    popover.id = 'wlpro-move-popover';
+    popover.innerHTML = `
+      <div class="wlpro-movepop-hdr">Move to</div>
+      ${otherLists.map(l => `<div class="wlpro-movepop-item" data-listidx="${l.idx}">${l.name}</div>`).join('')}
+    `;
+
+    document.documentElement.appendChild(popover);
+
+    // Position below the button, right-aligned
+    const rect = target.getBoundingClientRect();
+    const popW = 160;
+    popover.style.top  = (rect.bottom + 4) + 'px';
+    popover.style.left = Math.max(4, rect.right - popW) + 'px';
+    popover.style.width = popW + 'px';
+
+    popover.querySelectorAll('.wlpro-movepop-item').forEach(row => {
+      row.onclick = e => {
+        e.stopPropagation();
+        const toIdx = parseInt(row.getAttribute('data-listidx'));
+        const fromList = data.lists[data.activeIndex];
+        const toList   = data.lists[toIdx];
+        const i = fromList.symbols.indexOf(sym);
+        if (i >= 0) {
+          fromList.symbols.splice(i, 1);
+          if (!toList.symbols.includes(sym)) toList.symbols.push(sym);
+        }
+        popover.remove();
+        saveData(data, () => {
+          renderList();
+          showToast(`Moved to "${toList.name}"`);
+        });
+      };
+    });
+
+    // Close on outside click
+    setTimeout(() => {
+      const close = ev => {
+        if (!popover.contains(ev.target)) {
+          popover.remove();
+          document.removeEventListener('click', close);
+        }
+      };
+      document.addEventListener('click', close);
     }, 0);
   }
 
@@ -734,6 +811,89 @@
 
     panel.appendChild(ov);
     setTimeout(() => { ta.focus(); ta.select(); }, 50);
+  }
+
+  // ─── Backup ───
+  function backupData() {
+    loadData(d => {
+      const json = JSON.stringify(d, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date().toISOString().split('T')[0];
+      a.href = url;
+      a.download = `watchlistpro-backup-${date}.json`;
+      a.style.display = 'none';
+      document.documentElement.appendChild(a);
+      a.click();
+      setTimeout(() => { document.documentElement.removeChild(a); URL.revokeObjectURL(url); }, 100);
+      showToast(`Backup saved — ${d.lists.length} watchlist${d.lists.length !== 1 ? 's' : ''}`);
+    });
+  }
+
+  // ─── Restore ───
+  function restoreData() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.style.display = 'none';
+    document.documentElement.appendChild(input);
+
+    input.onchange = e => {
+      const file = e.target.files[0];
+      document.documentElement.removeChild(input);
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = evt => {
+        try {
+          const d = JSON.parse(evt.target.result);
+          if (!d.lists || !Array.isArray(d.lists)) throw new Error('Invalid format');
+
+          // Show confirmation modal with a preview of what's in the backup
+          removeModals();
+          const ov = document.createElement('div');
+          ov.className = 'wlpro-overlay';
+          const listItems = d.lists
+            .map(l => `<li style="padding:5px 0;font-size:12px;color:#aaa;border-bottom:1px solid rgba(255,255,255,0.04)">📋 ${l.name} <span style="color:#555">(${l.symbols.length} symbol${l.symbols.length !== 1 ? 's' : ''})</span></li>`)
+            .join('');
+          ov.innerHTML = `
+            <div class="wlpro-modal">
+              <div class="wlpro-modal-hdr"><span>Restore Backup</span><button class="wlpro-modal-x">✕</button></div>
+              <div class="wlpro-modal-body">
+                <p style="font-size:13px;color:#ccc;margin:0 0 10px">Found <strong>${d.lists.length}</strong> watchlist${d.lists.length !== 1 ? 's' : ''} in backup:</p>
+                <ul style="list-style:none;padding:0;margin:0 0 12px;max-height:160px;overflow-y:auto">${listItems}</ul>
+                <div style="background:rgba(255,80,80,0.08);border:1px solid rgba(255,80,80,0.2);border-radius:6px;padding:8px 10px;font-size:11px;color:#ff9090">
+                  ⚠️ This will replace all your current watchlists. This cannot be undone.
+                </div>
+              </div>
+              <div class="wlpro-modal-ftr">
+                <button class="wlpro-btn-sec wlpro-cancel">Cancel</button>
+                <button class="wlpro-btn-pri" id="wlpro-restoreconfirm">Restore</button>
+              </div>
+            </div>`;
+
+          ov.querySelector('.wlpro-modal-x').onclick = () => ov.remove();
+          ov.querySelector('.wlpro-cancel').onclick = () => ov.remove();
+          ov.onclick = ev => { if (ev.target === ov) ov.remove(); };
+
+          ov.querySelector('#wlpro-restoreconfirm').onclick = () => {
+            saveData(d, () => {
+              ov.remove();
+              refresh();
+              showToast(`Restored ${d.lists.length} watchlist${d.lists.length !== 1 ? 's' : ''}!`);
+            });
+          };
+
+          panel.appendChild(ov);
+        } catch (err) {
+          showToast('Invalid backup file — could not restore');
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    input.click();
   }
 
   function removeModals() { if (panel) panel.querySelectorAll('.wlpro-overlay').forEach(e => e.remove()); }
