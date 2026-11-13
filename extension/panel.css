@@ -287,6 +287,30 @@
   color: #555;
   flex-shrink: 0;
 }
+#wlpro-panel .wlpro-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#wlpro-panel .wlpro-refresh-btn {
+  background: none;
+  border: none;
+  color: #444;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: all 0.15s;
+}
+#wlpro-panel .wlpro-refresh-btn:hover {
+  color: #6c63ff;
+  background: rgba(108, 99, 255, 0.1);
+}
+#wlpro-panel .wlpro-refresh-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
 #wlpro-panel .wlpro-footer kbd {
   display: inline-block;
   background: rgba(255, 255, 255, 0.06);

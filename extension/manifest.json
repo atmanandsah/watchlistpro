@@ -3,8 +3,11 @@
   "name": "Watchlist Pro — Upstox",
   "version": "2.0.0",
   "description": "Advanced watchlist panel for Upstox trading terminal. Click icon to toggle.",
-  "permissions": ["storage", "activeTab", "scripting"],
-  "host_permissions": ["https://tv.upstox.com/*"],
+  "permissions": ["storage", "activeTab", "scripting", "alarms"],
+  "host_permissions": [
+    "https://tv.upstox.com/*",
+    "https://assets.upstox.com/*"
+  ],
   "content_scripts": [
     {
       "matches": ["https://tv.upstox.com/*"],

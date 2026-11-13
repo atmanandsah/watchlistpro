@@ -7,18 +7,38 @@
   let instruments = {}; // { "NSE:HDFCBANK": { i:"INE040A01034", n:"HDFC BANK LTD", s:"HDFC Bank" }, ... }
   let instrumentLookup = {}; // { "NSE_EQ|INE040A01034": "NSE:HDFCBANK", ... }
 
+  function buildLookup() {
+    instrumentLookup = {};
+    for (const [key, entry] of Object.entries(instruments)) {
+      if (entry && entry.i) {
+        const exch = key.split(':')[0] || 'NSE';
+        instrumentLookup[`${exch}_EQ|${entry.i}`] = key;
+      }
+    }
+  }
+
   function loadInstruments() {
+    // 1. Prefer live-cached data (kept fresh by background.js)
+    return chrome.storage.local.get('wlpro_instruments')
+      .then(result => {
+        const cached = result['wlpro_instruments'];
+        if (cached && cached.data && Object.keys(cached.data).length > 500) {
+          instruments = cached.data;
+          buildLookup();
+          return;
+        }
+        // 2. Fall back to bundled static file (works offline / first load)
+        return loadBundledInstruments();
+      })
+      .catch(() => loadBundledInstruments());
+  }
+
+  function loadBundledInstruments() {
     return fetch(chrome.runtime.getURL('instruments-upstox.json'))
       .then(r => r.json())
       .then(data => {
         instruments = data;
-        instrumentLookup = {};
-        for (const [key, entry] of Object.entries(instruments)) {
-          if (entry && entry.i) {
-            const exch = key.split(':')[0] || 'NSE';
-            instrumentLookup[`${exch}_EQ|${entry.i}`] = key;
-          }
-        }
+        buildLookup();
       })
       .catch(() => {
         instruments = {};
@@ -227,7 +247,10 @@
       </div>
       <div class="wlpro-list" id="wlpro-list"></div>
       <div class="wlpro-footer">
-        <span id="wlpro-count">0 symbols</span>
+        <span class="wlpro-footer-left">
+          <span id="wlpro-count">0 symbols</span>
+          <button id="wlpro-instruments-refresh" class="wlpro-refresh-btn" title="Refresh instrument list to include new IPOs / listings">⟳</button>
+        </span>
         <span><kbd>↑</kbd><kbd>↓</kbd> Navigate <kbd>Enter</kbd> Open</span>
       </div>`;
     document.documentElement.appendChild(panel);
@@ -252,6 +275,23 @@
   // ─── Events ───
   function bindEvents() {
     panel.querySelector('#wlpro-close').onclick = hide;
+
+    // Instruments refresh button (new IPOs)
+    panel.querySelector('#wlpro-instruments-refresh').onclick = () => {
+      const btn = panel.querySelector('#wlpro-instruments-refresh');
+      btn.textContent = '…';
+      btn.disabled    = true;
+      chrome.runtime.sendMessage({ action: 'refresh-instruments' }, result => {
+        btn.textContent = '⟳';
+        btn.disabled    = false;
+        if (result && result.success) {
+          showToast(`Updated — ${result.count.toLocaleString()} instruments`);
+          loadInstruments(); // reload into memory
+        } else {
+          showToast('Refresh failed — check your connection');
+        }
+      });
+    };
 
     // Watchlist selector
     panel.querySelector('#wlpro-select').onchange = function () {
@@ -903,6 +943,12 @@
     if (msg && msg.action === 'toggle-watchlist-panel') {
       const v = toggle();
       sendResponse({ visible: v });
+    }
+    // Background refreshed instruments — reload silently
+    if (msg && msg.action === 'instruments-updated') {
+      loadInstruments().then(() => {
+        if (visible) showToast(`Instruments updated — ${(msg.count || 0).toLocaleString()} listings`);
+      });
     }
     return true;
   });
